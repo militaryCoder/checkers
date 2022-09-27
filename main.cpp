@@ -23,6 +23,11 @@ constexpr size_t TABLE_DIM = 8;
 constexpr size_t TABLE_DATA_LEN = TABLE_DIM*TABLE_DIM;
 FieldState g_tableData[TABLE_DATA_LEN];
 
+struct GameState {
+    int whiteCount;
+    int blackCount;
+};
+
 auto accessTableData(size_t x, size_t y) -> FieldState & {
     return g_tableData[y*TABLE_DIM + x];
 }
@@ -179,8 +184,17 @@ void moveChecker(const upd_data::Move &data) {
     accessTableData(dest.x, dest.y) = movedCheckerType;
 }
 
-void destroyChecker(const upd_data::Destroy &data) {
+enum class Team {
+    Black,
+    White
+};
+auto determineTeam(const FieldState &fs) -> Team;
+void destroyChecker(const upd_data::Destroy &data, GameState &state) {
+    const auto checkerDestroyed = accessTableData(data.where.x, data.where.y);
     accessTableData(data.where.x, data.where.y) = FieldState::Empty;
+    if (determineTeam(checkerDestroyed) == Team::White)
+        state.whiteCount--;
+    else state.blackCount--;
 }
 void convertChecker(const upd_data::Convert &data) {
     accessTableData(data.where.x, data.where.y) =
@@ -212,10 +226,6 @@ void convertChecker(const upd_data::Convert &data) {
 enum class SpawnSide {
     Upper,
     Lower
-};
-enum class Team {
-    Black,
-    White
 };
 void spawnTeam(Team t, SpawnSide side) {
     const auto occupationType = t == Team::White
@@ -282,7 +292,7 @@ bool posOutOfField(const Position2D &pos) {
 }
 
 auto findAvailableMovesFromPos(const Position2D &pos) -> std::vector<Vec2D> {
-    const std::vector<Vec2D> virtMoves = {
+    static const std::vector<Vec2D> virtMoves = {
         { .x =  1, .y =  1 },
         { .x =  1, .y = -1 },
         { .x = -1, .y =  1 },
@@ -330,7 +340,7 @@ int main() {
 //    }
 
     // Game code start
-    std::ranges::generate(std::begin(g_tableData), std::end(g_tableData), generateDefaultTable);
+    std::generate(std::begin(g_tableData), std::end(g_tableData), generateDefaultTable);
 //    spawnTeam(Team::Black, SpawnSide::Upper);
 //    spawnTeam(Team::White, SpawnSide::Lower);
     const size_t checkerX = 7;
