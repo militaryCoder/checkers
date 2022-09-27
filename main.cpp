@@ -1,7 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <any>
+// #include <any>
 #include <algorithm>
 #include <iostream>
 #include <string>
@@ -103,56 +103,59 @@ enum class UpdateCause : std::uint8_t {
     Converted
 };
 
-using UpdateData = std::any;
-struct UpdateItem {
-    UpdateCause cause;
-    UpdateData data;
-};
+// TODO: implement compile-time substitution
+// of either std::any or hand-written alternative
+//
+// using UpdateData = std::any;
+// struct UpdateItem {
+//     UpdateCause cause;
+//     UpdateData data;
+// };
 
-constexpr size_t MAX_UPDATES = 4;
-struct UpdateBlock {
-    UpdateItem updates[MAX_UPDATES];
-
-    class UpdBlockIterator {
-    public:
-        UpdBlockIterator(UpdateBlock &parent)
-            : updBlock_(parent), idx_(0) {}
-        UpdBlockIterator(UpdateBlock &parent, size_t newIndex)
-            : updBlock_(parent), idx_(newIndex) {}
-        auto operator==(const UpdBlockIterator &other) -> bool {
-            return this->idx_ == other.idx_;
-        }
-        auto operator!=(const UpdBlockIterator &other) -> bool {
-            return !this->operator==(other);
-        }
-        auto operator*() -> UpdateItem & {
-            return updBlock_.updates[idx_];
-        }
-        auto operator++(int) -> const UpdBlockIterator {
-            UpdBlockIterator old(this->updBlock_, idx_);
-            idx_++;
-            return old;
-        }
-        auto operator++() -> const UpdBlockIterator & {
-            idx_++;
-            return UpdBlockIterator(updBlock_, idx_);
-        }
-        auto operator->() -> const UpdateItem * {
-            return &updBlock_.updates[idx_];
-        }
-
-    private:
-        size_t idx_;
-        UpdateBlock &updBlock_;
-    };
-
-    auto begin() -> UpdBlockIterator {
-        return UpdBlockIterator(*this);
-    }
-    auto end() -> UpdBlockIterator {
-        return UpdBlockIterator(*this, MAX_UPDATES);
-    }
-};
+// constexpr size_t MAX_UPDATES = 4;
+// struct UpdateBlock {
+//     UpdateItem updates[MAX_UPDATES];
+//
+//     class UpdBlockIterator {
+//     public:
+//         UpdBlockIterator(UpdateBlock &parent)
+//             : updBlock_(parent), idx_(0) {}
+//         UpdBlockIterator(UpdateBlock &parent, size_t newIndex)
+//             : updBlock_(parent), idx_(newIndex) {}
+//         auto operator==(const UpdBlockIterator &other) -> bool {
+//             return this->idx_ == other.idx_;
+//         }
+//         auto operator!=(const UpdBlockIterator &other) -> bool {
+//             return !this->operator==(other);
+//         }
+//         auto operator*() -> UpdateItem & {
+//             return updBlock_.updates[idx_];
+//         }
+//         auto operator++(int) -> const UpdBlockIterator {
+//             UpdBlockIterator old(this->updBlock_, idx_);
+//             idx_++;
+//             return old;
+//         }
+//         auto operator++() -> const UpdBlockIterator & {
+//             idx_++;
+//             return UpdBlockIterator(updBlock_, idx_);
+//         }
+//         auto operator->() -> const UpdateItem * {
+//             return &updBlock_.updates[idx_];
+//         }
+// 
+//     private:
+//         size_t idx_;
+//         UpdateBlock &updBlock_;
+//     };
+// 
+//     auto begin() -> UpdBlockIterator {
+//         return UpdBlockIterator(*this);
+//     }
+//     auto end() -> UpdBlockIterator {
+//         return UpdBlockIterator(*this, MAX_UPDATES);
+//     }
+// };
 
 namespace upd_data {
     struct Move {
@@ -186,21 +189,25 @@ void convertChecker(const upd_data::Convert &data) {
         : FieldState::SuperWhite;
 }
 
-void updateTable(UpdateBlock *upd) {
-    for (auto it = upd->begin(); it != upd->end(); it++) {
-        switch (static_cast<int>(it->cause)) {
-        case static_cast<int>(UpdateCause::Moved):
-            moveChecker(std::any_cast<upd_data::Move>(it->data));
-            break;
-        case static_cast<int>(UpdateCause::Destroyed):
-            destroyChecker(std::any_cast<upd_data::Destroy>(it->data));
-            break;
-        case static_cast<int>(UpdateCause::Converted):
-            convertChecker(std::any_cast<upd_data::Convert>(it->data));
-            break;
-        }
-    }
-}
+// Does not compile on macOS 10.13
+// TODO: implement compile-time substitution
+// of either std::any or hand-written alternative
+
+// void updateTable(UpdateBlock *upd) {
+//     for (auto it = upd->begin(); it != upd->end(); it++) {
+//         switch (static_cast<int>(it->cause)) {
+//         case static_cast<int>(UpdateCause::Moved):
+//             // moveChecker(std::any_cast<upd_data::Move>(it->data));
+//             break;
+//         case static_cast<int>(UpdateCause::Destroyed):
+//             // destroyChecker(std::any_cast<upd_data::Destroy>(it->data));
+//             break;
+//         case static_cast<int>(UpdateCause::Converted):
+//             // convertChecker(std::any_cast<upd_data::Convert>(it->data));
+//             break;
+//         }
+//     }
+// }
 
 enum class SpawnSide {
     Upper,
