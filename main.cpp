@@ -320,24 +320,32 @@ auto findAvailableMovesFromPos(const Position2D &pos) -> std::vector<Vec2D> {
 }
 
 int main() {
-//    if (!glfwInit()) {
-//        const char *errMsg;
-//        glfwGetError(&errMsg);
-//        std::cerr << "GLFW was not initialized.\n";
-//        std::cerr << errMsg << '\n';
-//    }
-//    std::cout << "GLFW was initialized successfully.\n";
-//
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//    GLFWwindow *wnd = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Window", nullptr, nullptr);
-//
-//    glfwMakeContextCurrent(wnd);
-//    glfwSwapInterval(1);
-//
-//    if (glewInit() != GLEW_OK) {
-//        std::cerr << "GLEW could not be initialized.\n";
-//    }
+    if (!glfwInit()) {
+        std::cerr << "Cannot initialize glfw.\n";
+        return -1;
+    }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_CORE_PROFILE, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    GLFWwindow *wnd = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Checkers", nullptr, nullptr);
+    if (!wnd) {
+        const char *desc;
+        const int errCode = glfwGetError(&desc);
+        glfwTerminate();
+        std::cerr << "Cannot create window.\n"
+            << "Reason: " << desc << '\n';
+        return -1;
+    }
+
+    glfwSwapInterval(1);
+    glfwMakeContextCurrent(wnd);
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Could not load glew.\n";
+        return -1;
+    }
 
     // Game code start
     std::generate(std::begin(g_tableData), std::end(g_tableData), generateDefaultTable);
@@ -356,12 +364,12 @@ int main() {
     for (const auto m : am) {
         std::cout << m.x << ';' << m.y << '\n';
     }
-//    while(!glfwWindowShouldClose(wnd)) {
-//        glClear(GL_COLOR_BUFFER_BIT);
-//        glfwSwapBuffers(wnd);
-//        glfwPollEvents();
-//    }
-//    glfwTerminate();
+    while(!glfwWindowShouldClose(wnd)) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glfwSwapBuffers(wnd);
+        glfwPollEvents();
+    }
+    glfwTerminate();
 
     return 0;
 }
