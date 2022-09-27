@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 
 project(Checkers LANGUAGES C CXX)
 
@@ -11,9 +11,15 @@ find_package(GLEW REQUIRED)
 
 add_executable(checkers main.cpp)
 target_include_directories(checkers PRIVATE ${glfw_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS})
-target_link_libraries(checkers PRIVATE opengl32 glfw GLEW::glew_s)
+target_link_libraries(checkers PRIVATE glfw GLEW::glew_s)
+if (APPLE)
+    target_link_libraries(checkers PRIVATE OpenGL::GL)
+endif(APPLE)
+if (WIN32)
+    target_link_libraries(checkers PRIVATE opengl32)
+endif(WIN32)
 set_target_properties(checkers PROPERTIES
     CXX_STANDARD_REQUIRED ON
-    CXX_STANDARD 20
+    CXX_STANDARD 17
     )
 target_compile_definitions(checkers PRIVATE GLEW_STATIC)
