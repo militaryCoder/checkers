@@ -2,10 +2,10 @@
 #include <cmath>
 #include <vector>
 
-#include "gfx/gl/types.hpp"
+#include "geometry.hpp"
 
 namespace primitives {
-    auto circle(float r, size_t vertCount = 8) -> std::vector<gl::Position2Df> {
+    auto circle(float r, size_t vertCount) -> std::vector<gl::Position2Df> {
         static constexpr float PI = 3.1415926f;
         std::vector<gl::Position2Df> vertices;
         vertices.reserve(vertCount + 1); // Adding one position entry for central point
