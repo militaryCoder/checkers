@@ -4,13 +4,18 @@
 // #include <any>
 #include <algorithm>
 #include <iostream>
+#include <functional>
 #include <string>
 #include <vector>
+
+#include "gfx/mesh2d.hpp"
+#include "geometry.hpp"
+#include "gfx/gl/types.hpp"
 
 constexpr size_t WINDOW_WIDTH = 640;
 constexpr size_t WINDOW_HEIGHT = 640;
 
-enum class FieldState : std::int32_t {
+enum class FieldState : int {
     NotPlayable,
     Empty,
     Black,
@@ -43,35 +48,33 @@ auto generateDefaultTable() -> FieldState {
 }
 
 auto drawBuffer() -> std::string {
-    constexpr size_t BUFLINE_LEN = TABLE_DIM + 1;
-    std::string buffer((BUFLINE_LEN) * TABLE_DIM, ' ');
-    for (size_t y = 0; y < TABLE_DIM; y++) {
-        for (size_t x = 0; x < TABLE_DIM; x++) {
-            char &curField = buffer[y*BUFLINE_LEN + x];
-            switch (static_cast<int>(accessTableData(x, y))) {
-                case static_cast<int>(FieldState::NotPlayable):
-                    curField = ' ';
-                    break;
-                case static_cast<int>(FieldState::Empty):
-                    curField = '#';
-                    break;
-                case static_cast<int>(FieldState::Black):
-                    curField = '0';
-                    break;
-                case static_cast<int>(FieldState::White):
-                    curField = 'O';
-                    break;
-                case static_cast<int>(FieldState::SuperBlack):
-                    curField = '$';
-                    break;
-                case static_cast<int>(FieldState::SuperWhite):
-                    curField = '%';
-            }
-        }
-        buffer[y*BUFLINE_LEN + BUFLINE_LEN - 1] = '\n';
-    }
-
-    return buffer;
+//    constexpr size_t BUFLINE_LEN = TABLE_DIM + 1;
+//    std::string buffer(BUFLINE_LEN * TABLE_DIM, ' ');
+//    for (size_t y = 0; y < TABLE_DIM; y++) {
+//        for (size_t x = 0; x < TABLE_DIM; x++) {
+//            char &curField = buffer[y*BUFLINE_LEN + x];
+//            switch (static_cast<int>(accessTableData(x, y))) {
+//                case static_cast<int>(FieldState::NotPlayable):
+//                    curField = ' ';
+//                    break;
+//                case static_cast<int>(FieldState::Empty):
+//                    curField = '#';
+//                    break;
+//                case static_cast<int>(FieldState::Black):
+//                    curField = '0';
+//                    break;
+//                case static_cast<int>(FieldState::White):
+//                    curField = 'O';
+//                    break;
+//                case static_cast<int>(FieldState::SuperBlack):
+//                    curField = '$';
+//                    break;
+//                case static_cast<int>(FieldState::SuperWhite):
+//                    curField = '%';
+//            }
+//        }
+//        buffer[y*BUFLINE_LEN + TABLE_DIM] = '\n';
+//    }
 }
 
 struct Position2D;
@@ -99,15 +102,41 @@ struct Position2D {
 };
 
 auto operator+(const Position2D &pos, const Vec2D &vec) -> Position2D {
-    return Position2D { pos.x + vec.x, pos.y + vec.y };
+    return { pos.x + vec.x, pos.y + vec.y };
 }
 
-enum class UpdateCause : std::uint8_t {
-    Moved,
-    Destroyed,
-    Converted
-};
+auto positionDataToLinearArray(const std::vector<gl::Position2Df> &positions) -> std::vector<GLfloat> {
+    std::vector<GLfloat> arr;
+    arr.reserve(positions.size() * 2);
+    for (size_t i = 0; i < positions.size(); i++) {
+        arr[i] = positions[i].x;
+        arr[i+1] = positions[i].y;
+    }
 
+    return arr;
+}
+
+auto generateCheckerMeshInfo() -> MeshInfo {
+    static constexpr GLfloat normR = 1.0f / 8 * .9;
+
+    gl::VertexArray va;
+    glGenVertexArrays(1, &va);
+    glBindVertexArray(va);
+    const auto verticesData = positionDataToLinearArray(primitives::circle(normR));
+    gl::ArrayBuffer vb(verticesData, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, true, 2 * sizeof(GLfloat), 0);
+    glEnableVertexAttribArray(0);
+    std::vector<GLuint> checkerIndices;
+    checkerIndices.reserve(verticesData.size());
+    for (size_t i = 0; i < verticesData.size(); i++)
+        checkerIndices[i] = i;
+    gl::IndexBuffer ib(checkerIndices, GL_DYNAMIC_DRAW);
+    glBindVertexArray(0);
+
+    return MeshInfo(va, vb, ib);
+}
+
+// Mesh2D checker(generateCheckerMeshInfo());
 // TODO: implement compile-time substitution
 // of either std::any or hand-written alternative
 //
@@ -357,8 +386,8 @@ int main() {
     const size_t opponentCheckerY = 4;
     accessTableData(checkerX, checkerY) = FieldState::Black;
     accessTableData(opponentCheckerX, opponentCheckerY) = FieldState::White;
-    const auto buf = drawBuffer();
-    std::cout << buf << "\n\n";
+//    const auto buf = drawBuffer();
+//    std::cout << buf << "\n\n";
 
     const auto am = findAvailableMovesFromPos({ .x = checkerX, .y = checkerY });
     for (const auto m : am) {
