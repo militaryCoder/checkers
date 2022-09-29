@@ -3,8 +3,8 @@
 #include "gl/buffers.hpp"
 
 struct MeshInfo {
-    MeshInfo(gl::ArrayBuffer<GLfloat> vb,
-            gl::VertexArray va,
+    MeshInfo(gl::VertexArray va,
+            gl::ArrayBuffer<GLfloat> vb,
             gl::IndexBuffer ib)
         : vb(std::move(vb)), va(va), ib(ib)
     {}
